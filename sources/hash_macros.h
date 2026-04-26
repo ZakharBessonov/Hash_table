@@ -1,0 +1,6 @@
+#ifndef HASH_MACROS_HEADER
+#define HASH_MACROS_HEADER
+
+
+
+#endif
