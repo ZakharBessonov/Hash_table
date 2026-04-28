@@ -9,8 +9,7 @@ struct TextBuffer
 };
 
 struct Element
-{ 
-    unsigned long  hash;
+{
     char*          word;
     Element*       nextWord;
 };
@@ -21,6 +20,20 @@ struct HashTable
     Element*    elements;
     size_t      maxSize;
 };
+
+struct HashFunc
+{
+    size_t          (*hashFuncPt)(char*);
+    const char*     labelOfFunc;
+    size_t          maxSizeOfHashTable;
+};
+
+struct Column
+{
+    size_t hash;
+    size_t height;
+};
+
 
 
 #endif

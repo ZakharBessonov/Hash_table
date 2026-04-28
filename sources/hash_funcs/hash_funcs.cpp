@@ -1,39 +1,63 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
+#include <limits.h>
 
 #include "hash_table_structs.h"
-#include "read_funcs.h"
 #include "hash_funcs.h"
 #include "hash_consts.h"
 
-static char* GetNewWordFromTextBuffer(TextBuffer* textBuffer)
+HashFunc hashFuncs[] = 
 {
-    while (!isalpha(*textBuffer->bufPt))
+    // {JustZero,              "тождественный ноль"            },
+    {AsciCodeOfFirstLetter, "ASCII-код первой буквы слова", HASH_TABLE_MAX_SIZE1},
+    {LenOfWord            , "длина слова"                 , HASH_TABLE_MAX_SIZE1},
+    {SumOfAsciCodes       , "сумма ASCII-кодов букв слова", HASH_TABLE_MAX_SIZE2},
+    {SumOfAsciCodes       , "сумма ASCII-кодов букв слова", HASH_TABLE_MAX_SIZE1},
+    {RolHash              , "комбинация rol и xor"        , HASH_TABLE_MAX_SIZE1},
+    {RorHash              , "комбинация ror и xor"        , HASH_TABLE_MAX_SIZE1},
+    {CRC_32               , "CRC-32"                      , HASH_TABLE_MAX_SIZE1}
+};
+
+size_t count = sizeof(hashFuncs) / sizeof(*hashFuncs);
+
+static size_t _rol(size_t value, size_t numOfShifts)
+{
+    size_t result = value;
+    for (size_t i = 0; i < numOfShifts; i++)
     {
-        if (*textBuffer->bufPt == '\0') return NULL;
-        textBuffer->bufPt++;
+        result = (result << 1) | (result >> (sizeof(size_t) * 8 - 1));
     }
-     
-    char* beginPt = textBuffer->bufPt;
-
-    while (isalpha(*textBuffer->bufPt) || (*textBuffer->bufPt == '-'))
-        textBuffer->bufPt++;
     
-    *textBuffer->bufPt = '\0';
-    textBuffer->bufPt++;
-
-    return beginPt;
+    return result;
 }
 
-static void CreateHashTable(HashTable* hashTable)
+static size_t _ror(size_t value, size_t numOfShifts)
 {
-    hashTable->elements = (Element*)calloc(ELEM_COUNTER_STEP, sizeof(Element));
-    hashTable->maxSize = ELEM_COUNTER_STEP;
+    size_t result = value;
+    for (size_t i = 0; i < numOfShifts; i++)
+    {
+        result = (result >> 1) | (result << (sizeof(size_t) * 8 - 1));
+    }
+    
+    return result;
 }
 
-static size_t GetHash(char* word)
+size_t JustZero(char* word)
+{
+    return 0; 
+}
+
+size_t AsciCodeOfFirstLetter(char* word)
+{
+    return (size_t)word[0]; 
+}
+
+size_t LenOfWord(char* word)
+{
+    return strlen(word); 
+}
+
+size_t SumOfAsciCodes(char* word)
 {
     size_t result = 0;
     while (*word != '\0')
@@ -44,123 +68,46 @@ static size_t GetHash(char* word)
     return result; 
 }
 
-static void IncreaseHashTableSize(HashTable* hashTable, size_t newSize)
+size_t RolHash(char* word)
 {
-    hashTable->elements = (Element*)recalloc(hashTable->elements, 
-                                             hashTable->maxSize, 
-                                             (newSize / ELEM_COUNTER_STEP + 1) * ELEM_COUNTER_STEP, 
-                                             sizeof(Element));
-    hashTable->maxSize = newSize;
-}
-
-static int IsWordNotRepeat(Element* element, char* newWord)
-{
-    if (element == NULL || element->word == NULL) return 1;
-    return (strcmp(newWord, element->word) && IsWordNotRepeat(element->nextWord, newWord));
-}
-
-static int PlaceWordInHashTable(char* newWord, HashTable* hashTable)
-{
-    if (newWord == NULL) return 1;
-
-    size_t hash = GetHash(newWord);
-    if (hash >= hashTable->maxSize)
+    size_t result = (size_t)(*word);
+    word++;
+    while (*word != '\0') 
     {
-        IncreaseHashTableSize(hashTable, hash + 1);
-    }
-
-    if (!IsWordNotRepeat(&hashTable->elements[hash], newWord)) return 0;
-
-    if (hashTable->elements[hash].word != NULL)
-    {
-        Element* newElement = (Element*)calloc(1, sizeof(Element));
-        newElement->word = newWord;
-        newElement->hash = hash;
-        if (hashTable->elements[hash].nextWord != NULL)
-            newElement->nextWord = hashTable->elements[hash].nextWord;
-        hashTable->elements[hash].nextWord = newElement;
-    }
-    else
-    {
-        hashTable->elements[hash].word = newWord;
-        hashTable->elements[hash].hash = hash;
-    }
-    hashTable->elemCounter++;
-    
-    return 0;
-}
-
-static void DeleteAllRepeatElements(Element* element)
-{
-    if (element == NULL) return;
-    DeleteAllRepeatElements(element->nextWord);
-    free(element);
-}
-
-static void FreeHashTable(HashTable* hashTable)
-{
-    int maxSize = hashTable->maxSize;
-    for (size_t i = 0; i < maxSize; i++)
-    {
-        if (hashTable->elements[i].nextWord != NULL) DeleteAllRepeatElements(hashTable->elements[i].nextWord);
+        result = _rol(result, 1) ^ (size_t)(*word);
+        word++;
     }
     
-    free(hashTable->elements);
+    return result; 
 }
 
-static void FreeTextBuffer(TextBuffer* textBuffer)
+size_t RorHash(char* word)
 {
-    free(textBuffer->startPt);
-}
-
-
-int HashFile(FILE* inputFile)
-{
-    TextBuffer bufferForWords = ReadWordsFromInputeFile(inputFile);
-    HashTable hashTable = {};
-    CreateHashTable(&hashTable);
-    
-    while (true)
+    size_t result = (size_t)(*word);
+    word++;
+    while (*word != '\0') 
     {
-        char* newWord = GetNewWordFromTextBuffer(&bufferForWords);
-        if (newWord == NULL) break;
+        result = _ror(result, 1) ^ (size_t)(*word);
+        word++;
+    }
+    
+    return result; 
+}
 
-        int result = PlaceWordInHashTable(newWord, &hashTable);
-        if (result)
+size_t CRC_32(char* word)
+{
+    unsigned int result = 0xFFFFFFFF;
+    while (*word != '\0')
+    {
+        result ^= (unsigned int)(*word);
+        for (size_t i = 0; i < 8; i++)
         {
-            printf("ERROR: A error was occurred while adding word %s in hashtable!\n",
-                    newWord);
+            if ((result & 1U) == 1U) result = (result >> 1) ^ 0xEDB88320;
+            else result >>= 1;
         }
+        word++;
     }
-
-    PrintInformationAboutHashTable(&hashTable, "Сумма ASCI-кодов букв");
-    FreeHashTable(&hashTable);
-    FreeTextBuffer(&bufferForWords);
-    return 0;
-}
-
-void PrintInformationAboutHashTable(HashTable* hashTable, const char* hashFuncName)
-{
-    FILE* logFile = fopen("logfile.txt", "ab");
-    int maxSize = hashTable->maxSize;
-    Element* elemNow = NULL;
-    fprintf(logFile, "Хэш-таблица для функции f(x) = %s :\n\n", hashFuncName);
-
-    for (size_t i = 0; i <= maxSize; i++)
-    {
-        if (hashTable->elements[i].word == NULL) continue;
-        elemNow = &hashTable->elements[i];
-        fprintf(logFile, "[%zu] : ", i);
-
-        do
-        {
-            fprintf(logFile, "%s", elemNow->word);
-            elemNow = elemNow->nextWord;
-        } while (elemNow && fprintf(logFile, ", "));
-
-        putc('\n', logFile);
-    }
-    fprintf(logFile, "\n\n");
-
-    fclose(logFile);
+    result ^= 0xFFFFFFFF;
+    
+    return (size_t)result; 
 }

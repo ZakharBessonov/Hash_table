@@ -2,5 +2,4 @@
 #define HASH_MACROS_HEADER
 
 
-
 #endif

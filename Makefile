@@ -8,11 +8,13 @@
 
 CC = clang++
 
-headers = -Isources/hash_funcs\
+headers = -Isources/general_funcs\
 		  -Isources/read_funcs\
+		  -Isources/hash_funcs\
 		  -Isources
 
 sources = sources/main.cpp\
+		  sources/general_funcs/general_funcs.cpp\
 		  sources/hash_funcs/hash_funcs.cpp\
 		  sources/read_funcs/read_funcs.cpp
 

@@ -38,13 +38,3 @@ size_t SizeOfFile(FILE* fp)
     fstat(descriptor, &statistics);
     return (size_t)statistics.st_size;
 }
-
-void* recalloc(void *memblock, size_t oldNum, size_t newNum, size_t size)
-{
-    void* newMemblock = calloc(newNum, size);
-	if (!newMemblock) return NULL;
-	memcpy(newMemblock, memblock, oldNum * size);
-	free(memblock);
-
-	return newMemblock;
-}

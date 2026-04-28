@@ -8,6 +8,6 @@ TextBuffer ReadWordsFromInputeFile(FILE* inputFile);
 
 size_t SizeOfFile(FILE* fp);
 
-void* recalloc(void *memblock, size_t oldNum, size_t newNum, size_t size);
+// int systemf(const char* formatString, ...);
 
 #endif

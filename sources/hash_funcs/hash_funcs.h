@@ -3,10 +3,18 @@
 
 #include <stdio.h>
 
-#include "hash_table_structs.h"
+size_t JustZero(char* word);
 
-int HashFile(FILE* inputFile);
+size_t AsciCodeOfFirstLetter(char* word);
 
-void PrintInformationAboutHashTable(HashTable* hashTable, const char* hashFuncName);
+size_t LenOfWord(char* word);
+
+size_t SumOfAsciCodes(char* word);
+
+size_t RolHash(char* word);
+
+size_t RorHash(char* word);
+
+size_t CRC_32(char* word);
 
 #endif
