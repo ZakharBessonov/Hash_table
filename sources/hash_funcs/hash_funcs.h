@@ -19,6 +19,7 @@ size_t RorHash(char* word);
 size_t Djb2(char* word);
 #endif
 
+void InitCRC_32Table();
 size_t CRC_32(char* word);
 
 #endif

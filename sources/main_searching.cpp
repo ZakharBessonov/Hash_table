@@ -3,6 +3,7 @@
 
 #include "general_funcs.h"
 #include "search_funcs.h"
+#include "hash_funcs.h"
 
 FILE* dictionary = NULL;
 
@@ -22,6 +23,7 @@ int main(int argc, char* argv[])
         return 1;
     }
 
+    InitCRC_32Table();
     CreateHashTableAndSearchWords(inputFile);
 
     return 0;
