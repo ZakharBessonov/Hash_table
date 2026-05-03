@@ -6,20 +6,7 @@
 #include "hash_funcs.h"
 #include "hash_consts.h"
 
-HashFunc hashFuncs[] = 
-{
-    // {JustZero,              "тождественный ноль"            },
-    {AsciCodeOfFirstLetter, "ASCII-код первой буквы слова", HASH_TABLE_MAX_SIZE1},
-    {LenOfWord            , "длина слова"                 , HASH_TABLE_MAX_SIZE1},
-    {SumOfAsciCodes       , "сумма ASCII-кодов букв слова", HASH_TABLE_MAX_SIZE2},
-    {SumOfAsciCodes       , "сумма ASCII-кодов букв слова", HASH_TABLE_MAX_SIZE1},
-    {RolHash              , "комбинация rol и xor"        , HASH_TABLE_MAX_SIZE1},
-    {RorHash              , "комбинация ror и xor"        , HASH_TABLE_MAX_SIZE1},
-    {CRC_32               , "CRC-32"                      , HASH_TABLE_MAX_SIZE1}
-};
-
-size_t count = sizeof(hashFuncs) / sizeof(*hashFuncs);
-
+#ifndef SEARCHING
 static size_t _rol(size_t value, size_t numOfShifts)
 {
     size_t result = value;
@@ -93,6 +80,18 @@ size_t RorHash(char* word)
     
     return result; 
 }
+
+size_t Djb2(char* word)
+{
+    size_t hash = 5381;
+    while (*word != '\0')
+    {
+        hash = ((hash << 5) + hash) + (size_t)(*word);
+        word++;
+    }
+    return hash;
+}
+#endif
 
 size_t CRC_32(char* word)
 {

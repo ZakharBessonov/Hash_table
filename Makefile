@@ -8,15 +8,29 @@
 
 CC = clang++
 
-headers = -Isources/general_funcs\
-		  -Isources/read_funcs\
-		  -Isources/hash_funcs\
-		  -Isources
+headers_build_graphs = 	-Isources/general_funcs\
+		  				-Isources/read_funcs\
+		  				-Isources/hash_funcs\
+		  				-Isources
 
-sources = sources/main.cpp\
-		  sources/general_funcs/general_funcs.cpp\
-		  sources/hash_funcs/hash_funcs.cpp\
-		  sources/read_funcs/read_funcs.cpp
+sources_build_graphs = 	sources/main_build_graphs.cpp\
+		  				sources/general_funcs/general_funcs.cpp\
+		  				sources/hash_funcs/hash_funcs.cpp\
+		  				sources/read_funcs/read_funcs.cpp
 
-all:
-	$(CC) -g $(sources) -o hash_table $(headers)
+headers_searching = 	-Isources/general_funcs\
+		  				-Isources/read_funcs\
+		  				-Isources/hash_funcs\
+						-Isources/search_funcs\
+		  				-Isources
+
+sources_searching = 	sources/main_searching.cpp\
+		  				sources/general_funcs/general_funcs.cpp\
+		  				sources/hash_funcs/hash_funcs.cpp\
+						sources/search_funcs/search_funcs.cpp\
+		  				sources/read_funcs/read_funcs.cpp
+
+all_build_graphs:
+	$(CC) -g $(sources_build_graphs) -o hash_table_build_graphs $(headers_build_graphs)
+all_searching:
+	$(CC) -g $(sources_searching) -o hash_table_searching $(headers_searching) -DSEARCHING -O3

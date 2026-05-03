@@ -2,8 +2,8 @@
 #include <stdlib.h>
 
 #include "general_funcs.h"
+#include "search_funcs.h"
 
-FILE* logFile = NULL;
 FILE* dictionary = NULL;
 
 int main(int argc, char* argv[])
@@ -15,8 +15,6 @@ int main(int argc, char* argv[])
     }
 
     FILE* inputFile = fopen(argv[1], "rb");
-    logFile = fopen("logfile.txt", "wb");
-    dictionary = fopen("dictionary.txt", "wb");
 
     if (inputFile == NULL)
     {
@@ -24,8 +22,7 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    int result = HashFileByDifferentHashFuncs(inputFile);
-    fclose(logFile);
-    fclose(dictionary);
+    CreateHashTableAndSearchWords(inputFile);
+
     return 0;
 }

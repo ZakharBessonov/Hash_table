@@ -10,14 +10,56 @@
 #include "general_funcs.h"
 #include "hash_consts.h"
 
-extern HashFunc hashFuncs[];
-extern const size_t count;
+#ifndef SEARCHING
 extern FILE* logFile;
+extern FILE* dataForExcel;
+#endif
+
 extern FILE* dictionary;
 
 bool isNeedCollectDictionary = true;
 
-static char* GetNewWordFromTextBuffer(TextBuffer* textBuffer)
+static int IsWordNotRepeat(Element* element, char* newWord)
+{
+    if (element == NULL || element->word == NULL) return 1;
+    return (strcmp(newWord, element->word) && IsWordNotRepeat(element->nextWord, newWord));
+}
+
+static void PrintWordInDictionary(char* newWord)
+{
+    static int charCounter = 0;
+    charCounter += fprintf(dictionary, "%s, ", newWord);
+    if (charCounter >= SIZE_OF_CHARS_ON_ONE_STRING_IN_DICTIONARY)
+    {
+        putc('\n', dictionary);
+        charCounter = 0;
+    }
+}
+
+static void DeleteAllRepeatElements(Element* element)
+{
+    if (element == NULL) return;
+    DeleteAllRepeatElements(element->nextWord);
+    free(element);
+}
+
+void FreeHashTable(HashTable* hashTable)
+{
+    int maxSize = hashTable->maxSize;
+    for (size_t i = 0; i < maxSize; i++)
+    {
+        if (hashTable->elements[i].nextWord != NULL) DeleteAllRepeatElements(hashTable->elements[i].nextWord);
+    }
+    
+    free(hashTable->elements);
+}
+
+void FreeTextBuffer(TextBuffer* textBuffer)
+{
+    free(textBuffer->startPt);
+}
+
+char* GetNewWordFromTextBuffer(TextBuffer* textBuffer)
 {
     while (!isalpha(*textBuffer->bufPt))
     {
@@ -39,31 +81,14 @@ static char* GetNewWordFromTextBuffer(TextBuffer* textBuffer)
     return beginPt;
 }
 
-static void CreateHashTable(HashTable* hashTable, size_t maxSizeOfHashTable)
+void CreateHashTable(HashTable* hashTable, size_t maxSizeOfHashTable)
 {
     Element* elems = (Element*)calloc(maxSizeOfHashTable, sizeof(Element));
     hashTable->elements = elems;
     hashTable->maxSize = maxSizeOfHashTable;
 }
 
-static int IsWordNotRepeat(Element* element, char* newWord)
-{
-    if (element == NULL || element->word == NULL) return 1;
-    return (strcmp(newWord, element->word) && IsWordNotRepeat(element->nextWord, newWord));
-}
-
-static void PrintWordInDictionary(char* newWord)
-{
-    static int charCounter = 0;
-    charCounter += fprintf(dictionary, "%s, ", newWord);
-    if (charCounter >= SIZE_OF_CHARS_ON_ONE_STRING_IN_DICTIONARY)
-    {
-        putc('\n', dictionary);
-        charCounter = 0;
-    }
-}
-
-static int PlaceWordInHashTable(char* newWord, HashTable* hashTable, HashFunc hashfunc)
+int PlaceWordInHashTable(char* newWord, HashTable* hashTable, const HashFunc hashfunc)
 {
     if (newWord == NULL) return 1;
 
@@ -90,37 +115,14 @@ static int PlaceWordInHashTable(char* newWord, HashTable* hashTable, HashFunc ha
     return 0;
 }
 
-static void DeleteAllRepeatElements(Element* element)
-{
-    if (element == NULL) return;
-    DeleteAllRepeatElements(element->nextWord);
-    free(element);
-}
-
-static void FreeHashTable(HashTable* hashTable)
-{
-    int maxSize = hashTable->maxSize;
-    for (size_t i = 0; i < maxSize; i++)
-    {
-        if (hashTable->elements[i].nextWord != NULL) DeleteAllRepeatElements(hashTable->elements[i].nextWord);
-    }
-    
-    free(hashTable->elements);
-}
-
-static void FreeTextBuffer(TextBuffer* textBuffer)
-{
-    free(textBuffer->startPt);
-}
-
-
+#ifndef SEARCHING
 int HashFileByDifferentHashFuncs(FILE* inputFile)
 {
     TextBuffer bufferForWords = ReadWordsFromInputeFile(inputFile);
     for (size_t i = 0; i < count; i++)
     {
         fprintf(logFile, "(%zu) ", i);
-        HashFile(hashFuncs[i], bufferForWords, i);
+        HashFile(hashFuncs[i], bufferForWords);
         isNeedCollectDictionary = false;
     }
     
@@ -128,7 +130,7 @@ int HashFileByDifferentHashFuncs(FILE* inputFile)
     return 0;
 }
 
-void HashFile(HashFunc hashfunc, TextBuffer bufferForWords, size_t hashTableCounter)
+void HashFile(const HashFunc hashfunc, TextBuffer bufferForWords)
 {
     HashTable hashTable = {};
     CreateHashTable(&hashTable, hashfunc.maxSizeOfHashTable);
@@ -148,16 +150,18 @@ void HashFile(HashFunc hashfunc, TextBuffer bufferForWords, size_t hashTableCoun
 
     size_t* graphForHashTable = (size_t*)calloc(hashTable.maxSize, sizeof(size_t));
     PrintInformationAboutHashTable(&hashTable, hashfunc, graphForHashTable);
-    PlotHistogram(graphForHashTable, hashfunc, hashTableCounter);
+    PlotHistogram(graphForHashTable, hashfunc);
     FreeHashTable(&hashTable);
     free(graphForHashTable);
 }
 
-void PrintInformationAboutHashTable(HashTable* hashTable, HashFunc hashfunc, size_t* graphForHashTable)
+void PrintInformationAboutHashTable(HashTable* hashTable, const HashFunc hashfunc, size_t* graphForHashTable)
 {
     int maxSize = hashTable->maxSize;
     Element* elemNow = NULL;
     fprintf(logFile, "Хэш-таблица для функции f(x) = %s. Размер: %zu \n\n", 
+            hashfunc.labelOfFunc, hashfunc.maxSizeOfHashTable);
+    fprintf(dataForExcel, "Хэш-таблица для функции f(x) = %s. Размер: %zu \n\n", 
             hashfunc.labelOfFunc, hashfunc.maxSizeOfHashTable);
 
     for (size_t i = 0; i < maxSize; i++)
@@ -165,6 +169,7 @@ void PrintInformationAboutHashTable(HashTable* hashTable, HashFunc hashfunc, siz
         if (hashTable->elements[i].word == NULL)
         {
             fprintf(logFile, "[%zu] : \n", i);
+            fprintf(dataForExcel, "%zu ; 0\n", i);
             continue;
         }
 
@@ -178,15 +183,17 @@ void PrintInformationAboutHashTable(HashTable* hashTable, HashFunc hashfunc, siz
             elemNow = elemNow->nextWord;
         } while (elemNow && fprintf(logFile, ", "));
 
+        fprintf(dataForExcel, "%zu ; %zu\n", i, graphForHashTable[i]);
         putc('\n', logFile);
     }
     fprintf(logFile, "\n\n");
+    fprintf(dataForExcel, "\n\n");
 }
 
-void PlotHistogram(size_t* graphForHashTable, HashFunc hashfunc, size_t hashTableCounter)
+void PlotHistogram(size_t* graphForHashTable, const HashFunc hashfunc)
 {
     char* gnuplotFileName = (char*)calloc(MAX_FILE_NAME_LEN, sizeof(char));
-    snprintf(gnuplotFileName, MAX_FILE_NAME_LEN, "graphics_plot/graphic%zu.plot", hashTableCounter);
+    snprintf(gnuplotFileName, MAX_FILE_NAME_LEN, "graphics_plot/%s.plot", hashfunc.labelOfFunc);
 
     FILE* gnuplotFile = fopen(gnuplotFileName, "w");
     FILE* data        = fopen("graphics_plot/data.txt", "w");
@@ -198,7 +205,7 @@ void PlotHistogram(size_t* graphForHashTable, HashFunc hashfunc, size_t hashTabl
     fclose(data);
     
     fprintf(gnuplotFile,    "set terminal pngcairo size 800,600\n"
-                            "set output 'graphics_png/histogram%zu.png'\n"
+                            "set output 'graphics_png/%s.png'\n"
 
                             "set title \"f(x) = %s\"\n"
                             "set xlabel \"Hash\"\n"
@@ -215,20 +222,21 @@ void PlotHistogram(size_t* graphForHashTable, HashFunc hashfunc, size_t hashTabl
                             "stats 'graphics_plot/data.txt' using 1 nooutput\n"
 
                             "# --- диапазон ---\n"
-                            "set yrange [0:STATS_max+5]\n"
-                            "set xrange [0:STATS_records+5]\n"
+                            "set yrange [0:(6.0/5.0)*STATS_max]\n"
+                            "set xrange [-%zu:STATS_records+5]\n"
 
                             "# --- построение ---\n"
                             "plot 'graphics_plot/data.txt' using 0:1 with boxes", 
-            hashTableCounter, hashfunc.labelOfFunc);
+            hashfunc.labelOfFunc, hashfunc.labelOfFunc, (size_t)(0.05 * hashfunc.maxSizeOfHashTable));
     
     fclose(gnuplotFile);
 
     size_t addition = strlen("gnuplot ");
     char* stringForSystem = (char*)calloc(MAX_FILE_NAME_LEN + addition, sizeof(char));
     snprintf(stringForSystem, MAX_FILE_NAME_LEN + addition, 
-             "gnuplot graphics_plot/graphic%zu.plot", hashTableCounter);
+             "gnuplot graphics_plot/\"%s.plot\"", hashfunc.labelOfFunc);
     system(stringForSystem);
     free(gnuplotFileName);
     free(stringForSystem);
 }
+#endif

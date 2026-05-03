@@ -34,6 +34,14 @@ struct Column
     size_t height;
 };
 
+struct Dict
+{
+    char*   bufferForWords;
+    char**  wordsPts;
+    char**  randomWordsPts;
+    size_t  numPfWords;
+};
+
 
 
 #endif
