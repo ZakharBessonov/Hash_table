@@ -16,7 +16,7 @@
 
 extern FILE* dictionary;
 
-extern "C" int MyStrcmp(const char* str1, const char* str2);
+// extern "C" int MyStrcmp(const char* str1, const char* str2);
 
 static void ReadDictionary(FILE* dictFile, Dict* dict)
 {
@@ -158,6 +158,35 @@ void CreateHashTableAndSearchWords(FILE* inputFile)
     free(dict->randomWordsPts);
     free(dict->wordsPts);
     free(hashTable);
+}
+
+int MyStrcmp(const char* str1, const char* str2) 
+{
+    int result;
+
+    asm volatile (
+        "1:\n\t"
+        "ldrb w2, [%1], #1\n\t"   // w2 = *str1++
+        "ldrb w3, [%2], #1\n\t"   // w3 = *str2++
+        "cmp w2, w3\n\t"
+        "b.ne 2f\n\t"             // если не равны → not_equal
+        "cbz w2, 3f\n\t"          // если 0 → equal
+        "b 1b\n\t"                // loop
+
+        "2:\n\t"                  // not_equal
+        "mov %w0, #1\n\t"
+        "b 4f\n\t"
+
+        "3:\n\t"                  // equal
+        "mov %w0, #0\n\t"
+
+        "4:\n\t"
+        : "=&r" (result), "+r" (str1), "+r" (str2)
+        :
+        : "w2", "w3", "cc", "memory"
+    );
+
+    return result;
 }
 
 static long perf_event_open(struct perf_event_attr *hw_event,

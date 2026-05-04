@@ -9,6 +9,7 @@
 #include "hash_funcs.h"
 #include "general_funcs.h"
 #include "hash_consts.h"
+#include "search_funcs.h"
 
 #ifndef SEARCHING
 extern FILE* logFile;
@@ -17,7 +18,7 @@ extern FILE* dataForExcel;
 
 extern FILE* dictionary;
 
-extern "C" int MyStrcmp(const char* str1, const char* str2);
+// extern "C" int MyStrcmp(const char* str1, const char* str2);
 
 bool isNeedCollectDictionary = true;
 
