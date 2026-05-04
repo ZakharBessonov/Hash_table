@@ -28,9 +28,10 @@ sources_searching = 	sources/main_searching.cpp\
 		  				sources/general_funcs/general_funcs.cpp\
 		  				sources/hash_funcs/hash_funcs.cpp\
 						sources/search_funcs/search_funcs.cpp\
-		  				sources/read_funcs/read_funcs.cpp
+		  				sources/read_funcs/read_funcs.cpp\
+						sources/my_strcmp/my_strcmp.s
 
 all_build_graphs:
 	$(CC) -g $(sources_build_graphs) -o hash_table_build_graphs $(headers_build_graphs)
 all_searching:
-	$(CC) -g $(sources_searching) -o hash_table_searching $(headers_searching) -DSEARCHING -O3
+	$(CC) -g -fno-omit-frame-pointer $(sources_searching) -o hash_table_searching $(headers_searching) -DSEARCHING

@@ -123,3 +123,21 @@ size_t CRC_32(char* word)
     
     return (size_t)(result ^ 0xFFFFFFFF); 
 }
+
+// size_t CRC_32(char* word)
+// {
+//     unsigned int result = 0xFFFFFFFF;
+//     while (*word != '\0')
+//     {
+//         result ^= (unsigned int)(*word);
+//         for (size_t i = 0; i < 8; i++)
+//         {
+//             if ((result & 1U) == 1U) result = (result >> 1) ^ 0xEDB88320;
+//             else result >>= 1;
+//         }
+//         word++;
+//     }
+//     result ^= 0xFFFFFFFF;
+    
+//     return (size_t)result; 
+// }

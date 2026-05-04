@@ -12,7 +12,7 @@ const size_t MAX_FILE_NAME_LEN = 200;
 const int SIZE_OF_CHARS_ON_ONE_STRING_IN_DICTIONARY = 90;
 
 #ifdef SEARCHING
-const size_t NUM_OF_SEARCHES = 200000000;
+const size_t NUM_OF_SEARCHES = 400000000;
 #endif
 
 const HashFunc hashFuncs[] = 

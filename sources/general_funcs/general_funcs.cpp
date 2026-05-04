@@ -17,12 +17,14 @@ extern FILE* dataForExcel;
 
 extern FILE* dictionary;
 
+extern "C" int MyStrcmp(const char* str1, const char* str2);
+
 bool isNeedCollectDictionary = true;
 
 static int IsWordNotRepeat(Element* element, char* newWord)
 {
     if (element == NULL || element->word == NULL) return 1;
-    return (strcmp(newWord, element->word) && IsWordNotRepeat(element->nextWord, newWord));
+    return (MyStrcmp(newWord, element->word) && IsWordNotRepeat(element->nextWord, newWord));
 }
 
 static void PrintWordInDictionary(char* newWord)

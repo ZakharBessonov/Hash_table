@@ -1,8 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdlib.h>
+#include <stdint.h>
 #include <ctype.h>
+#include <linux/perf_event.h>
+#include <sys/ioctl.h>
+#include <sys/syscall.h>
+#include <unistd.h>
 
 #include "search_funcs.h"
 #include "read_funcs.h"
@@ -11,6 +15,8 @@
 #include "hash_consts.h"
 
 extern FILE* dictionary;
+
+extern "C" int MyStrcmp(const char* str1, const char* str2);
 
 static void ReadDictionary(FILE* dictFile, Dict* dict)
 {
@@ -124,7 +130,7 @@ void SearchingInHashTable(HashTable* hashTable, Dict* dictionary, HashFunc hashf
     {
         hash = hashfunc.hashFuncPt(dictionary->randomWordsPts[i]) % hashfunc.maxSizeOfHashTable;
         elem = &hashTable->elements[hash];
-        while (strcmp(elem->word, dictionary->randomWordsPts[i]) && elem)
+        while (elem && MyStrcmp(elem->word, dictionary->randomWordsPts[i]))
         {
             elem = elem->nextWord;
         }
@@ -141,7 +147,10 @@ void CreateHashTableAndSearchWords(FILE* inputFile)
 
     Dict* dict = CollectDictForSearching();
 
+    int fd = start_counter();
     SearchingInHashTable(hashTable, dict, hashFuncs[0]);
+    long long cycles = end_counter(fd);
+    printf("\nПроведено %zu поисков. Циклов CPU: %llu\n", NUM_OF_SEARCHES, cycles);
 
     FreeHashTable(hashTable);
     FreeTextBuffer(&bufferForWords);
@@ -149,4 +158,67 @@ void CreateHashTableAndSearchWords(FILE* inputFile)
     free(dict->randomWordsPts);
     free(dict->wordsPts);
     free(hashTable);
+}
+
+static long perf_event_open(struct perf_event_attr *hw_event,
+                            pid_t pid,
+                            int cpu,
+                            int group_fd,
+                            unsigned long flags)
+{
+    return syscall(__NR_perf_event_open,
+                   hw_event, pid, cpu, group_fd, flags);
+}
+
+
+
+int start_counter()
+{
+    struct perf_event_attr pe;
+    memset(&pe, 0, sizeof(pe));
+
+    pe.type = PERF_TYPE_HARDWARE;
+    pe.size = sizeof(pe);
+    pe.config = PERF_COUNT_HW_CPU_CYCLES;
+
+    pe.disabled = 1;
+    pe.exclude_kernel = 1;
+    pe.exclude_hv = 1;
+    pe.exclude_idle = 1;
+
+    int fd = perf_event_open(&pe, 0, -1, -1, 0);
+    if (fd == -1) 
+    {
+        perror("perf_event_open");
+        return -1;
+    }
+
+    if (ioctl(fd, PERF_EVENT_IOC_RESET, 0) == -1)
+        perror("ioctl RESET");
+
+    if (ioctl(fd, PERF_EVENT_IOC_ENABLE, 0) == -1)
+        perror("ioctl ENABLE");
+
+    return fd;
+}
+
+long long end_counter(int fd)
+{
+    if (fd < 0)
+        return -1;
+
+    if (ioctl(fd, PERF_EVENT_IOC_DISABLE, 0) == -1)
+        perror("ioctl DISABLE");
+
+    long long cycles = 0;
+
+    if (read(fd, &cycles, sizeof(cycles)) != sizeof(cycles)) 
+    {
+        perror("read");
+        close(fd);
+        return -1;
+    }
+
+    close(fd);
+    return cycles;
 }
