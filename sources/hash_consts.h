@@ -3,11 +3,14 @@
 
 #include <stdio.h>
 
+#include "hash_funcs.h"
+
 const size_t ELEM_COUNTER_STEP = 1024;
 const size_t HASH_TABLE_MAX_SIZE1 = 4001;
 const size_t HASH_TABLE_MAX_SIZE2 = 541;
 
 const size_t MAX_FILE_NAME_LEN = 200;
+const size_t BYTES_FOR_ONE_STRING = 32;
 
 const int SIZE_OF_CHARS_ON_ONE_STRING_IN_DICTIONARY = 90;
 

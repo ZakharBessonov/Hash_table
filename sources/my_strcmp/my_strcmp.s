@@ -2,20 +2,13 @@
 .global MyStrcmp
 .p2align 2
 MyStrcmp:
-loop:
-    ldrb    w2, [x0], #1     // загрузить *a++, байт
-    ldrb    w3, [x1], #1     // загрузить *b++, байт
+    ld1     {v0.16b}, [x0]
+    ld1     {v1.16b}, [x1]
 
-    cmp     w2, w3
-    b.ne    not_equal        // различаются → сразу выходим
+    cmeq     v0.16b, v0.16b, v1.16b
 
-    cbz     w2, equal        // оба 0 → строки равны
-    b       loop
+    uminv   b1, v0.16b
+    umov    w0, v1.b[0]
 
-not_equal:
-    mov     w0, #1
     ret
 
-equal:
-    mov     w0, #0
-    ret

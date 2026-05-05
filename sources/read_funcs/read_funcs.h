@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include "hash_table_structs.h"
 
+FILE* PrepareInputFile(FILE* inputFile);
+
 TextBuffer ReadWordsFromInputeFile(FILE* inputFile);
 
 size_t SizeOfFile(FILE* fp);

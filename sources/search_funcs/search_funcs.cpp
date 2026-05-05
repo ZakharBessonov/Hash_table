@@ -44,8 +44,15 @@ static void FillArrayOfWordsPts(Dict* dict)
     char* beginPt = dict->bufferForWords;
     while (*beginPt != '\0')
     {
-        if (*beginPt == ',') numOfWords++;
-        beginPt++;
+        if (*beginPt == ' ')
+        {
+            numOfWords++;
+            while (*beginPt == ' ') beginPt++;
+        }
+        else
+        {
+            beginPt++;
+        }
     }
 
     dict->numPfWords = numOfWords;
@@ -54,12 +61,11 @@ static void FillArrayOfWordsPts(Dict* dict)
     beginPt = dict->bufferForWords;
     char* endPt = dict->bufferForWords;
 
-    while (!isalpha(*beginPt)) {beginPt++; endPt++;};
     size_t wordsCnt = 0;
 
     while (*endPt != '\0')
     {
-        if (*endPt == ',')
+        if (*endPt == ' ')
         {
             *endPt = '\0';
             dict->wordsPts[wordsCnt++] = beginPt;
@@ -130,7 +136,7 @@ void SearchingInHashTable(HashTable* hashTable, Dict* dictionary, HashFunc hashf
     {
         hash = hashfunc.hashFuncPt(dictionary->randomWordsPts[i]) % hashfunc.maxSizeOfHashTable;
         elem = &hashTable->elements[hash];
-        while (elem && MyStrcmp(elem->word, dictionary->randomWordsPts[i]))
+        while (elem && (!MyStrcmp(elem->word, dictionary->randomWordsPts[i])))
         {
             elem = elem->nextWord;
         }

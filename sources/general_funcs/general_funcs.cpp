@@ -24,17 +24,17 @@ bool isNeedCollectDictionary = true;
 static int IsWordNotRepeat(Element* element, char* newWord)
 {
     if (element == NULL || element->word == NULL) return 1;
-    return (MyStrcmp(newWord, element->word) && IsWordNotRepeat(element->nextWord, newWord));
+    return (!MyStrcmp(newWord, element->word) && IsWordNotRepeat(element->nextWord, newWord));
 }
 
 static void PrintWordInDictionary(char* newWord)
 {
-    static int charCounter = 0;
-    charCounter += fprintf(dictionary, "%s, ", newWord);
-    if (charCounter >= SIZE_OF_CHARS_ON_ONE_STRING_IN_DICTIONARY)
+    int charCounter = 0;
+    charCounter += fprintf(dictionary, "%s", newWord);
+
+    for (;charCounter < BYTES_FOR_ONE_STRING; charCounter++)
     {
-        putc('\n', dictionary);
-        charCounter = 0;
+        putc(' ', dictionary);
     }
 }
 
