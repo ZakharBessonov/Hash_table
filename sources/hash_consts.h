@@ -6,7 +6,7 @@
 #include "hash_funcs.h"
 
 const size_t ELEM_COUNTER_STEP = 1024;
-const size_t HASH_TABLE_MAX_SIZE1 = 8009;
+const size_t HASH_TABLE_MAX_SIZE1 = 4001;
 const size_t HASH_TABLE_MAX_SIZE2 = 541;
 
 const size_t MAX_FILE_NAME_LEN = 200;
