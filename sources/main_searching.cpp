@@ -28,7 +28,7 @@ int main(int argc, char* argv[])
     inputFile = PrepareInputFile(inputFile);
 
     InitCRC_32Table();
-    CreateHashTableAndSearchWords(inputFile);
+    CreateHashTableAndSearchWords_opt(inputFile);
 
     return 0;
 }

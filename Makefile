@@ -22,6 +22,7 @@ headers_searching = 	-Isources/general_funcs\
 		  				-Isources/read_funcs\
 		  				-Isources/hash_funcs\
 						-Isources/search_funcs\
+						-Isources/setters_and_getters\
 		  				-Isources
 
 sources_searching = 	sources/main_searching.cpp\
@@ -29,6 +30,7 @@ sources_searching = 	sources/main_searching.cpp\
 		  				sources/hash_funcs/hash_funcs.cpp\
 						sources/search_funcs/search_funcs.cpp\
 		  				sources/read_funcs/read_funcs.cpp\
+						sources/setters_and_getters/setters_and_getters.cpp\
 						sources/my_strcmp/my_strcmp.s
 
 all_build_graphs:

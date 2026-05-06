@@ -15,6 +15,8 @@ char* GetNewWordFromTextBuffer(TextBuffer* textBuffer);
 
 int PlaceWordInHashTable(char* newWord, HashTable* hashTable, const HashFunc hashfunc);
 
+int PlaceWordInHashTable_opt(char* newWord, char* hashTable, const HashFunc hashfunc);
+
 #ifndef SEARCHING
 int HashFileByDifferentHashFuncs(FILE* inputFile);
 

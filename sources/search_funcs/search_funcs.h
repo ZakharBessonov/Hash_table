@@ -11,6 +11,8 @@ void SearchingInHashTable(HashTable* hashTable, Dict* dictionary);
 
 void CreateHashTableAndSearchWords(FILE* inputFile);
 
+void CreateHashTableAndSearchWords_opt(FILE* inputFile);
+
 int start_counter();
 
 long long end_counter(int fd);

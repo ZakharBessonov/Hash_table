@@ -9,6 +9,7 @@
 #include "hash_funcs.h"
 #include "general_funcs.h"
 #include "hash_consts.h"
+#include "setters_and_getters.h"
 
 #ifndef SEARCHING
 extern FILE* logFile;
@@ -25,6 +26,12 @@ static int IsWordNotRepeat(Element* element, char* newWord)
 {
     if (element == NULL || element->word == NULL) return 1;
     return (!MyStrcmp(newWord, element->word) && IsWordNotRepeat(element->nextWord, newWord));
+}
+
+static int IsWordNotRepeat_opt(char* word, char* newWord)
+{
+    if (*word == ' ') return 1;
+    return (!MyStrcmp(newWord, word) && IsWordNotRepeat_opt(GetNextWord(word), newWord));
 }
 
 static void PrintWordInDictionary(char* newWord)
@@ -85,7 +92,7 @@ char* GetNewWordFromTextBuffer(TextBuffer* textBuffer)
 
 void CreateHashTable(HashTable* hashTable, size_t maxSizeOfHashTable)
 {
-    Element* elems = (Element*)calloc(maxSizeOfHashTable, sizeof(Element));
+    Element* elems = (Element*)calloc(16 * maxSizeOfHashTable, sizeof(Element));
     hashTable->elements = elems;
     hashTable->maxSize = maxSizeOfHashTable;
 }
@@ -113,6 +120,26 @@ int PlaceWordInHashTable(char* newWord, HashTable* hashTable, const HashFunc has
         hashTable->elements[hash].word = newWord;
     }
     hashTable->elemCounter++;
+    
+    return 0;
+}
+
+int PlaceWordInHashTable_opt(char* newWord, char* hashTable_opt, const HashFunc hashfunc)
+{
+    if (newWord == NULL) return 1;
+
+    size_t hash = hashfunc.hashFuncPt(newWord) % hashfunc.maxSizeOfHashTable;
+    char* cellPt = GetCellInHashTable(hashTable_opt, hash);
+
+    if (!IsWordNotRepeat_opt(cellPt, newWord)) return 0;
+
+    if (isNeedCollectDictionary) PrintWordInDictionary(newWord);
+
+    while (*cellPt != ' ')
+    {
+        cellPt = GetNextWord(cellPt);
+    }
+    strcpy(cellPt, newWord);
     
     return 0;
 }

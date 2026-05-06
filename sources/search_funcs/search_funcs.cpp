@@ -13,6 +13,7 @@
 #include "general_funcs.h"
 #include "hash_funcs.h"
 #include "hash_consts.h"
+#include "setters_and_getters.h"
 
 extern FILE* dictionary;
 
@@ -95,6 +96,15 @@ static void FillArrayOfRandomWordsPts(Dict* dict)
     }
 }
 
+static void FreeDictionary(Dict* dict)
+{
+    free(dict->bufferForWords);
+    free(dict->randomWordsPts);
+    free(dict->randomWordsLens);
+    free(dict->wordsPts);
+    free(dict->wordsLens);
+}
+
 Dict* CollectDictForSearching()
 {
     Dict* dict = (Dict*)calloc(1, sizeof(Dict));
@@ -132,12 +142,35 @@ HashTable* CreateHashTableForSearch(HashFunc hashfunc, TextBuffer bufferForWords
     return hashTable;
 }
 
+char* CreateHashTableForSearch_opt(HashFunc hashfunc, TextBuffer bufferForWords)
+{
+    char* hashTable_opt = (char*)calloc(HASH_TABLE_MAX_SIZE1 * MAX_LOAD_FACTOR * BYTES_FOR_ONE_STRING, 
+                                        sizeof(char));
+    memset(hashTable_opt, ' ', HASH_TABLE_MAX_SIZE1 * MAX_LOAD_FACTOR * BYTES_FOR_ONE_STRING);
+    
+    while (true)
+    {
+        char* newWord = GetNewWordFromTextBuffer(&bufferForWords);
+        if (newWord == NULL) break;
+
+        int result = PlaceWordInHashTable_opt(newWord, hashTable_opt, hashfunc);
+        if (result)
+        {
+            printf("ERROR: A error was occurred while adding word %s in hashtable!\n",
+                    newWord);
+        }
+    }
+
+    fclose(dictionary);
+    return hashTable_opt;
+}
+
 void SearchingInHashTable(HashTable* hashTable, Dict* dictionary)
 {
     size_t hash = 0;
     Element* elem = NULL;
 
-    for (volatile size_t i = 0; i < NUM_OF_SEARCHES; i++)
+    for (size_t i = 0; i < NUM_OF_SEARCHES; i++)
     {
         hash =  CRC_32_intrin(dictionary->randomWordsPts[i], dictionary->randomWordsLens[i]) % HASH_TABLE_MAX_SIZE1;
         elem = &hashTable->elements[hash];
@@ -150,6 +183,24 @@ void SearchingInHashTable(HashTable* hashTable, Dict* dictionary)
     putchar(elem->word[0]);
 }
 
+void SearchingInHashTable_opt(char* hashTable_opt, Dict* dictionary)
+{
+    size_t hash = 0;
+    char* elem = NULL;
+
+    for (size_t i = 0; i < NUM_OF_SEARCHES; i++)
+    {
+        hash =  CRC_32_intrin(dictionary->randomWordsPts[i], dictionary->randomWordsLens[i]) % HASH_TABLE_MAX_SIZE1;
+        elem = GetCellInHashTable(hashTable_opt, hash);
+        while (elem && !MyStrcmp(elem, dictionary->randomWordsPts[i]))
+        {
+            elem += BYTES_FOR_ONE_STRING;
+        }
+    }
+
+    putchar(elem[0]);
+}
+
 void CreateHashTableAndSearchWords(FILE* inputFile)
 {
     dictionary = fopen("dictionary.txt", "w");
@@ -158,19 +209,33 @@ void CreateHashTableAndSearchWords(FILE* inputFile)
 
     Dict* dict = CollectDictForSearching();
 
-    int fd = start_counter();
+    // int fd = start_counter();
     SearchingInHashTable(hashTable, dict);
-    long long cycles = end_counter(fd);
-    printf("\nПроведено %zu поисков. Циклов CPU: %llu\n", NUM_OF_SEARCHES, cycles);
+    // long long cycles = end_counter(fd);
+    // printf("\nПроведено %zu поисков. Циклов CPU: %llu\n", NUM_OF_SEARCHES, cycles);
 
     FreeHashTable(hashTable);
     FreeTextBuffer(&bufferForWords);
-    free(dict->bufferForWords);
-    free(dict->randomWordsPts);
-    free(dict->randomWordsLens);
-    free(dict->wordsPts);
-    free(dict->wordsLens);
+    FreeDictionary(dict);
     free(hashTable);
+}
+
+void CreateHashTableAndSearchWords_opt(FILE* inputFile)
+{
+    dictionary = fopen("dictionary.txt", "w");
+    TextBuffer bufferForWords = ReadWordsFromInputeFile(inputFile);
+    char* hashTable_opt = CreateHashTableForSearch_opt(hashFuncs[0], bufferForWords);
+
+    Dict* dict = CollectDictForSearching();
+
+    int fd = start_counter();
+    SearchingInHashTable_opt(hashTable_opt, dict);
+    long long cycles = end_counter(fd);
+    printf("\nПроведено %zu поисков. Циклов CPU: %llu\n", NUM_OF_SEARCHES, cycles);
+
+    free(hashTable_opt);
+    FreeTextBuffer(&bufferForWords);
+    FreeDictionary(dict);
 }
 
 static long perf_event_open(struct perf_event_attr *hw_event,
