@@ -38,7 +38,9 @@ struct Dict
 {
     char*   bufferForWords;
     char**  wordsPts;
+    size_t* wordsLens;
     char**  randomWordsPts;
+    size_t* randomWordsLens;
     size_t  numPfWords;
 };
 

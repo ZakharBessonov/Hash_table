@@ -22,4 +22,6 @@ size_t Djb2(char* word);
 void InitCRC_32Table();
 size_t CRC_32(char* word);
 
+size_t CRC_32_intrin(const void* data, size_t len);
+
 #endif

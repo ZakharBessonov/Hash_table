@@ -7,7 +7,7 @@ Dict* CollectDictForSearching();
 
 HashTable* CreateHashTableForSearch(HashFunc hashfunc, TextBuffer bufferForWords);
 
-void SearchingInHashTable(HashTable* hashTable, Dict* dictionary, HashFunc hashfunc);
+void SearchingInHashTable(HashTable* hashTable, Dict* dictionary);
 
 void CreateHashTableAndSearchWords(FILE* inputFile);
 

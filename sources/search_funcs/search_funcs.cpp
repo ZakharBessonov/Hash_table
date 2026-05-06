@@ -57,6 +57,7 @@ static void FillArrayOfWordsPts(Dict* dict)
 
     dict->numPfWords = numOfWords;
     dict->wordsPts = (char**)calloc(numOfWords, sizeof(char*));
+    dict->wordsLens = (size_t*)calloc(numOfWords, sizeof(size_t));
 
     beginPt = dict->bufferForWords;
     char* endPt = dict->bufferForWords;
@@ -68,7 +69,8 @@ static void FillArrayOfWordsPts(Dict* dict)
         if (*endPt == ' ')
         {
             *endPt = '\0';
-            dict->wordsPts[wordsCnt++] = beginPt;
+            dict->wordsPts[wordsCnt] = beginPt;
+            dict->wordsLens[wordsCnt++] = endPt - beginPt;
             endPt++;
             beginPt = endPt;
             while (!isalpha(*beginPt) && (*beginPt != '\0')) {beginPt++; endPt++;};
@@ -84,9 +86,12 @@ static void FillArrayOfRandomWordsPts(Dict* dict)
 {
     srand(1);
     dict->randomWordsPts = (char**)calloc(NUM_OF_SEARCHES, sizeof(char*));
+    dict->randomWordsLens = (size_t*)calloc(NUM_OF_SEARCHES, sizeof(size_t));
     for (size_t i = 0; i < NUM_OF_SEARCHES; i++)
     {
-        dict->randomWordsPts[i] = dict->wordsPts[(size_t)rand() % dict->numPfWords];
+        size_t randomIndex = (size_t)rand() % dict->numPfWords;
+        dict->randomWordsPts[i] = dict->wordsPts[randomIndex];
+        dict->randomWordsLens[i] = dict->wordsLens[randomIndex];
     }
 }
 
@@ -127,14 +132,14 @@ HashTable* CreateHashTableForSearch(HashFunc hashfunc, TextBuffer bufferForWords
     return hashTable;
 }
 
-void SearchingInHashTable(HashTable* hashTable, Dict* dictionary, HashFunc hashfunc)
+void SearchingInHashTable(HashTable* hashTable, Dict* dictionary)
 {
     size_t hash = 0;
     Element* elem = NULL;
 
-    for (size_t i = 0; i < NUM_OF_SEARCHES; i++)
+    for (volatile size_t i = 0; i < NUM_OF_SEARCHES; i++)
     {
-        hash = hashfunc.hashFuncPt(dictionary->randomWordsPts[i]) % hashfunc.maxSizeOfHashTable;
+        hash =  CRC_32_intrin(dictionary->randomWordsPts[i], dictionary->randomWordsLens[i]) % HASH_TABLE_MAX_SIZE1;
         elem = &hashTable->elements[hash];
         while (elem && (!MyStrcmp(elem->word, dictionary->randomWordsPts[i])))
         {
@@ -154,7 +159,7 @@ void CreateHashTableAndSearchWords(FILE* inputFile)
     Dict* dict = CollectDictForSearching();
 
     int fd = start_counter();
-    SearchingInHashTable(hashTable, dict, hashFuncs[0]);
+    SearchingInHashTable(hashTable, dict);
     long long cycles = end_counter(fd);
     printf("\nПроведено %zu поисков. Циклов CPU: %llu\n", NUM_OF_SEARCHES, cycles);
 
@@ -162,7 +167,9 @@ void CreateHashTableAndSearchWords(FILE* inputFile)
     FreeTextBuffer(&bufferForWords);
     free(dict->bufferForWords);
     free(dict->randomWordsPts);
+    free(dict->randomWordsLens);
     free(dict->wordsPts);
+    free(dict->wordsLens);
     free(hashTable);
 }
 

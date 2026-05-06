@@ -34,4 +34,4 @@ sources_searching = 	sources/main_searching.cpp\
 all_build_graphs:
 	$(CC) -g $(sources_build_graphs) -o hash_table_build_graphs $(headers_build_graphs)
 all_searching:
-	$(CC) -g -fno-omit-frame-pointer $(sources_searching) -o hash_table_searching $(headers_searching) -DSEARCHING
+	$(CC) -g -march=armv8-a+crc -fno-omit-frame-pointer $(sources_searching) -o hash_table_searching $(headers_searching) -DSEARCHING

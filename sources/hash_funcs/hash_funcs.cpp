@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <limits.h>
+#include <arm_acle.h>
 
 #include "hash_table_structs.h"
 #include "hash_funcs.h"
@@ -108,6 +109,26 @@ void InitCRC_32Table()
         }
         crcTable[i] = crc;
     }
+}
+
+size_t CRC_32_intrin(const void* data, size_t len)
+{
+    const uint8_t* p = (const uint8_t*)data;
+    uint32_t crc = 0xFFFFFFFF;
+
+    while (len >= 8)
+    {
+        crc = __crc32d(crc, *(uint64_t*)p);
+        p += 8;
+        len -= 8;
+    }
+
+    while (len--)
+    {
+        crc = __crc32b(crc, *p++);
+    }
+
+    return crc ^ 0xFFFFFFFF;
 }
 
 size_t CRC_32(char* word)
