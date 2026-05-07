@@ -28,7 +28,7 @@ static void ReadDictionary(FILE* dictFile, Dict* dict)
         return;
     }
 
-    dict->bufferForWords = (char*)calloc(sizeOfFile + 1, 1);
+    posix_memalign((void**)&dict->bufferForWords, 32, sizeOfFile + 1);
     if (dict->bufferForWords == NULL)
     {
         printf("ERROR: A error was occurred while allocating memory for buffer.\n");
@@ -86,8 +86,8 @@ static void FillArrayOfWordsPts(Dict* dict)
 static void FillArrayOfRandomWordsPts(Dict* dict)
 {
     srand(1);
-    dict->randomWordsPts = (char**)calloc(NUM_OF_SEARCHES, sizeof(char*));
-    dict->randomWordsLens = (size_t*)calloc(NUM_OF_SEARCHES, sizeof(size_t));
+    posix_memalign((void**)&dict->randomWordsPts, 32, NUM_OF_SEARCHES * sizeof(char*));
+    posix_memalign((void**)&dict->randomWordsLens, 32, NUM_OF_SEARCHES * sizeof(size_t));
     for (size_t i = 0; i < NUM_OF_SEARCHES; i++)
     {
         size_t randomIndex = (size_t)rand() % dict->numPfWords;
@@ -144,8 +144,8 @@ HashTable* CreateHashTableForSearch(HashFunc hashfunc, TextBuffer bufferForWords
 
 char* CreateHashTableForSearch_opt(HashFunc hashfunc, TextBuffer bufferForWords)
 {
-    char* hashTable_opt = (char*)calloc(HASH_TABLE_MAX_SIZE1 * MAX_LOAD_FACTOR * BYTES_FOR_ONE_STRING, 
-                                        sizeof(char));
+    char* hashTable_opt = NULL;
+    posix_memalign((void**)&hashTable_opt, 32, HASH_TABLE_MAX_SIZE1 * MAX_LOAD_FACTOR * BYTES_FOR_ONE_STRING);
     memset(hashTable_opt, ' ', HASH_TABLE_MAX_SIZE1 * MAX_LOAD_FACTOR * BYTES_FOR_ONE_STRING);
     
     while (true)
