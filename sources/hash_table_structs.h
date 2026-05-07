@@ -21,6 +21,12 @@ struct HashTable
     size_t      maxSize;
 };
 
+struct HashTable_opt
+{
+    char* hashTable;
+    char* listOfLongWords;
+};
+
 struct HashFunc
 {
     size_t          (*hashFuncPt)(char*);

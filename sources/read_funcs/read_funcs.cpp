@@ -70,6 +70,7 @@ TextBuffer ReadWordsFromInputeFile(FILE* inputFile)
     }
 
     char* buffer = (char*)calloc(sizeOfFile + 1, 1);
+    
     if (buffer == NULL)
     {
         printf("ERROR: A error was occurred while allocating memory for buffer.\n");

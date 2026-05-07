@@ -28,18 +28,19 @@ static int IsWordNotRepeat(Element* element, char* newWord)
     return (!MyStrcmp(newWord, element->word) && IsWordNotRepeat(element->nextWord, newWord));
 }
 
-static int IsWordNotRepeat_opt(char* word, char* newWord)
+static int IsWordNotRepeat_opt(char* word, char* newWord, size_t lenOfStr)
 {
     if (*word == ' ') return 1;
-    return (!MyStrcmp(newWord, word) && IsWordNotRepeat_opt(GetNextWord(word), newWord));
+    return (!MyStrcmp(newWord, word) && IsWordNotRepeat_opt(word + lenOfStr, newWord, lenOfStr));
 }
 
 static void PrintWordInDictionary(char* newWord)
 {
     int charCounter = 0;
     charCounter += fprintf(dictionary, "%s", newWord);
+    size_t lenOfStr = charCounter < BYTES_FOR_ONE_STRING ? BYTES_FOR_ONE_STRING : BYTES_FOR_ONE_LONG_STRING;
 
-    for (;charCounter < BYTES_FOR_ONE_STRING; charCounter++)
+    for (;charCounter < lenOfStr; charCounter++)
     {
         putc(' ', dictionary);
     }
@@ -124,20 +125,31 @@ int PlaceWordInHashTable(char* newWord, HashTable* hashTable, const HashFunc has
     return 0;
 }
 
-int PlaceWordInHashTable_opt(char* newWord, char* hashTable_opt, const HashFunc hashfunc)
+int PlaceWordInHashTable_opt(char* newWord, HashTable_opt hashTable_opt, const HashFunc hashfunc)
 {
     if (newWord == NULL) return 1;
 
     size_t hash = hashfunc.hashFuncPt(newWord) % hashfunc.maxSizeOfHashTable;
-    char* cellPt = GetCellInHashTable(hashTable_opt, hash);
+    char* cellPt = NULL;
+    size_t lenOfStr = 0;
+    if (strlen(newWord) < 16)
+    {
+        cellPt = GetCellInHashTable(hashTable_opt, hash);
+        lenOfStr = BYTES_FOR_ONE_STRING;
+    }
+    else
+    {
+        cellPt = hashTable_opt.listOfLongWords;
+        lenOfStr = BYTES_FOR_ONE_LONG_STRING;
+    }
 
-    if (!IsWordNotRepeat_opt(cellPt, newWord)) return 0;
+    if (!IsWordNotRepeat_opt(cellPt, newWord, lenOfStr)) return 0;
 
     if (isNeedCollectDictionary) PrintWordInDictionary(newWord);
 
     while (*cellPt != ' ')
     {
-        cellPt = GetNextWord(cellPt);
+        cellPt = cellPt + lenOfStr;
     }
     strcpy(cellPt, newWord);
     

@@ -8,14 +8,14 @@
 #include "hash_consts.h"
 #include "setters_and_getters.h"
 
-char* GetCellInHashTable(char* hashTable_opt, size_t hash)
+char* GetCellInHashTable(HashTable_opt hashTable_opt, size_t hash)
 {
-    return (hashTable_opt + hash * MAX_LOAD_FACTOR * BYTES_FOR_ONE_STRING);
+    return (hashTable_opt.hashTable + hash * MAX_LOAD_FACTOR * BYTES_FOR_ONE_STRING);
 }
 
-char* GetWordFromCellInHashTable(char* hashTable_opt, size_t hash, size_t numOfWordInCell)
+char* GetWordFromCellInHashTable(HashTable_opt hashTable_opt, size_t hash, size_t numOfWordInCell)
 {
-    return (hashTable_opt + BYTES_FOR_ONE_STRING * (hash * MAX_LOAD_FACTOR + numOfWordInCell));
+    return (hashTable_opt.hashTable + BYTES_FOR_ONE_STRING * (hash * MAX_LOAD_FACTOR + numOfWordInCell));
 }
 
 char* GetNextWord(char* word)
@@ -23,8 +23,14 @@ char* GetNextWord(char* word)
     return (word + BYTES_FOR_ONE_STRING);
 }
 
-char* SetStringInHashTable(char* source, char* hashTable_opt, size_t hash, size_t numOfWordInCell)
+char* GetNextLongWord(char* word)
 {
-    char* address = hashTable_opt + BYTES_FOR_ONE_STRING * (hash * MAX_LOAD_FACTOR + numOfWordInCell);
+    return (word + BYTES_FOR_ONE_LONG_STRING);
+}
+
+char* SetStringInHashTable(char* source, HashTable_opt hashTable_opt, size_t hash, size_t numOfWordInCell)
+{
+    char* address = hashTable_opt.hashTable + BYTES_FOR_ONE_STRING * (hash * MAX_LOAD_FACTOR + numOfWordInCell);
     return strcpy(address, source);
 }
+
