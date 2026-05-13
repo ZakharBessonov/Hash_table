@@ -22,14 +22,14 @@ const size_t NUM_OF_SEARCHES = 400000000;
 
 const HashFunc hashFuncs[] = 
 {
-    // {JustZero             , "тождественный ноль"          , HASH_TABLE_MAX_SIZE1},
-    // {AsciCodeOfFirstLetter, "ASCII-код первой буквы слова", HASH_TABLE_MAX_SIZE1},
-    // {LenOfWord            , "длина слова"                 , HASH_TABLE_MAX_SIZE1},
-    // {SumOfAsciCodes       , "сумма ASCII-кодов букв слова", HASH_TABLE_MAX_SIZE2},
-    // {SumOfAsciCodes       , "сумма ASCII-кодов букв слова", HASH_TABLE_MAX_SIZE1},
-    // {RolHash              , "комбинация rol и xor"        , HASH_TABLE_MAX_SIZE1},
-    // {RorHash              , "комбинация ror и xor"        , HASH_TABLE_MAX_SIZE1},
-    // {Djb2                 , "DJB2"                        , HASH_TABLE_MAX_SIZE1},
+    {JustZero             , "тождественный ноль"          , HASH_TABLE_MAX_SIZE1},
+    {AsciCodeOfFirstLetter, "ASCII-код первой буквы слова", HASH_TABLE_MAX_SIZE1},
+    {LenOfWord            , "длина слова"                 , HASH_TABLE_MAX_SIZE1},
+    {SumOfAsciCodes       , "сумма ASCII-кодов букв слова", HASH_TABLE_MAX_SIZE2},
+    {SumOfAsciCodes       , "сумма ASCII-кодов букв слова", HASH_TABLE_MAX_SIZE1},
+    {RolHash              , "комбинация rol и xor"        , HASH_TABLE_MAX_SIZE1},
+    {RorHash              , "комбинация ror и xor"        , HASH_TABLE_MAX_SIZE1},
+    {Djb2                 , "DJB2"                        , HASH_TABLE_MAX_SIZE1},
     {CRC_32               , "CRC-32"                      , HASH_TABLE_MAX_SIZE1}
 };
 
